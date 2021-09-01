@@ -13,9 +13,13 @@ namespace PlatformService
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+
+        private readonly IWebHostEnvironment _env;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            this._env = env;
         }
 
         public IConfiguration Configuration { get; }
@@ -23,9 +27,24 @@ namespace PlatformService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<AppDbContext>(
-                opts => opts.UseInMemoryDatabase("InMem")
-            );
+
+            if (this._env.IsProduction())
+            {
+                Console.WriteLine("--> Using SQL Server");
+
+                services.AddDbContext<AppDbContext>(
+                    opts => opts.UseSqlServer(Configuration.GetConnectionString("PlatformSQLServer"))
+                );
+            }
+            else
+            {
+                Console.WriteLine("--> Using In Memory Database");
+
+                services.AddDbContext<AppDbContext>(
+                    opts => opts.UseInMemoryDatabase("InMem")
+                );
+            }
+
 
             services.AddScoped<IPlatformRepository, PlatformRepository>();
             services.AddHttpClient<ICommandDataClient, CommandDataClient>();
@@ -60,7 +79,7 @@ namespace PlatformService
                 endpoints.MapControllers();
             });
 
-            SeedDb.PrepPopulation(app);
+            SeedDb.PrepPopulation(app, env.IsProduction());
             Console.WriteLine($"--> Commands Service Endpoint: {Configuration["CommandsService"]}");
         }
     }
