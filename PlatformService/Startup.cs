@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using PlatformService.AsyncDataServices.Http;
 using PlatformService.Data;
 using PlatformService.SyncDataServices.Http;
 
@@ -47,6 +48,8 @@ namespace PlatformService
 
 
             services.AddScoped<IPlatformRepository, PlatformRepository>();
+            services.AddSingleton<IMessageBusClient, MessageBusClient>();
+
             services.AddHttpClient<ICommandDataClient, CommandDataClient>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

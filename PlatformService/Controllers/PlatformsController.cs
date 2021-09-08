@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using PlatformService.AsyncDataServices.Http;
 using PlatformService.Data;
 using PlatformService.Dtos;
 using PlatformService.Models;
@@ -17,12 +18,19 @@ namespace PlatformService.Controllers
         private readonly IPlatformRepository _repository;
         private readonly IMapper _mapper;
         private readonly ICommandDataClient _commandClient;
+        private readonly IMessageBusClient _messageBusClient;
 
-        public PlatformsController(IPlatformRepository repository, IMapper mapper, ICommandDataClient commandClient)
+        public PlatformsController(
+            IPlatformRepository repository,
+            IMapper mapper,
+            ICommandDataClient commandClient,
+            IMessageBusClient messageBusClient
+        )
         {
             this._repository = repository;
             this._mapper = mapper;
             this._commandClient = commandClient;
+            this._messageBusClient = messageBusClient;
         }
 
         [HttpGet]
@@ -54,14 +62,26 @@ namespace PlatformService.Controllers
 
             var platformReadDto = this._mapper.Map<PlatformReadDto>(platformModel);
 
+            // Synchronous Message 
             try
             {
-
                 await this._commandClient.SendPlatformToCommand(platformReadDto);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"---> Could not send to Commands Service: {ex.Message}");
+            }
+
+            // Async Message
+            try
+            {
+                this._messageBusClient.PublishNewPlatform(
+                    this._mapper.Map<PlatformPublishDto>(platformReadDto)
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"---> Could not publish to Message Bus: {ex.Message}");
             }
 
             return CreatedAtRoute(
