@@ -28,7 +28,7 @@ metadata:
   name: rabbitmq-clusterip-srv
 spec:
   selector:
-    app: rbmq-mgmt-port
+    app: rabbitmq
   type: ClusterIP
   ports:
   - name: rbmq-mgmt-port

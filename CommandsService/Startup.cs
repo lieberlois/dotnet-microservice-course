@@ -1,17 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using CommandsService.AsyncDataServices;
 using CommandsService.Data;
+using CommandsService.EventProcessing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 namespace CommandsService
@@ -30,10 +26,14 @@ namespace CommandsService
         {
             services.AddControllers();
 
+            // Long running task (Message Bus Listener)
+            services.AddHostedService<MessageBusSubscriber>();
+
             services.AddDbContext<AppDbContext>(opts => opts.UseInMemoryDatabase("InMem"));
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddScoped<ICommandRepository, CommandRepository>();
+            services.AddSingleton<IEventProcessor, EventProcessor>();
 
             services.AddSwaggerGen(c =>
             {

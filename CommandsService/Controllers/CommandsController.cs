@@ -20,6 +20,26 @@ namespace CommandsService.Controllers
             this._mapper = mapper;
         }
 
+        [HttpGet]
+        public ActionResult<IEnumerable<CommandReadDto>> GetCommandsForPlatform(int platformId)
+        {
+            if (!this._commandRepository.PlatformExists(platformId))
+            {
+                return NotFound();
+            }
+
+            var commands = this._commandRepository.GetCommandsForPlatform(platformId);
+
+            if (commands == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(
+                this._mapper.Map<IEnumerable<CommandReadDto>>(commands)
+            );
+        }
+
         [HttpGet("{commandId}", Name = "GetCommandForPlatform")]
         public ActionResult<CommandReadDto> GetCommandForPlatform(int platformId, int commandId)
         {
